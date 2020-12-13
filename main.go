@@ -63,7 +63,8 @@ func defaultDBConn() (db *sql.DB) {
 
 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@tcp("+dbHost+":"+dbPort+")/"+dbName)
 	if err != nil {
-		panic(err.Error())
+		log.Fatal(err.Error())
+		return nil
 	}
 	db.SetConnMaxLifetime(time.Minute * 3)
 	db.SetMaxOpenConns(10)
@@ -129,7 +130,8 @@ func Show(w http.ResponseWriter, r *http.Request) {
 	nID := r.URL.Query().Get("id")
 	selDB, err := db.Query("SELECT id, user, description, details, COALESCE(cc_list, '') FROM tickets WHERE id=?", nID)
 	if err != nil {
-		panic(err.Error())
+		handleDbError(w, err)
+		return
 	}
 	defer selDB.Close()
 	ticketItem := Ticket{}
@@ -140,7 +142,8 @@ func Show(w http.ResponseWriter, r *http.Request) {
 
 		err = selDB.Scan(&id, &user, &description, &details, &ccList)
 		if err != nil {
-			panic(err.Error())
+			handleDbError(w, err)
+			return
 		}
 		ticketItem.ID = id
 		ticketItem.User = user
@@ -172,7 +175,8 @@ func Edit(w http.ResponseWriter, r *http.Request) {
 		var user, description, details, ccList string
 		err = selDB.Scan(&id, &user, &description, &details, &ccList)
 		if err != nil {
-			panic(err.Error())
+			handleDbError(w, err)
+			return
 		}
 		ticketItem.ID = id
 		ticketItem.User = user
@@ -192,7 +196,8 @@ func Insert(w http.ResponseWriter, r *http.Request) {
 		ccList := r.FormValue("ccList")
 		insForm, err := db.Prepare("INSERT INTO tickets(user, description, details, cc_list) VALUES(?,?,?,?)")
 		if err != nil {
-			panic(err.Error())
+			handleDbError(w, err)
+			return
 		}
 		defer insForm.Close()
 		insForm.Exec(user, description, details, ccList)
@@ -211,7 +216,8 @@ func Update(w http.ResponseWriter, r *http.Request) {
 		uid := r.FormValue("uid")
 		insForm, err := db.Prepare("UPDATE tickets SET user=?, description=?, details=?, cc_list=? where id=?")
 		if err != nil {
-			panic(err.Error())
+			handleDbError(w, err)
+			return
 		}
 		defer insForm.Close()
 		insForm.Exec(user, description, details, ccList, uid)
@@ -226,7 +232,8 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 	ticketID := r.URL.Query().Get("id")
 	delForm, err := db.Prepare("DELETE FROM tickets WHERE id=?")
 	if err != nil {
-		panic(err.Error())
+		handleDbError(w, err)
+		return
 	}
 	defer delForm.Close()
 
@@ -237,8 +244,14 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 }
 
 func Health(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("healthy"))
-	w.WriteHeader(http.StatusOK)
+	if err := db.Ping(); err != nil {
+		handleDbError(w, err)
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusServiceUnavailable)
+	} else {
+		w.Write([]byte("healthy"))
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func setLocalDB() {

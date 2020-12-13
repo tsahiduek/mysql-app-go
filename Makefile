@@ -8,8 +8,6 @@ IMAGE?=octicketing
 IMAGE_TAG?=$(VERSION)
 IMAGE_REPOSITORY?=$(ACCOUNT_NUM).dkr.ecr.$(REGION).amazonaws.com
 
-SVC_NAME?=octieketing
-
 # all: gencerts-deploy deploy  build-image push clean
 
 .PHONY: codebuild-local
@@ -18,11 +16,12 @@ codebuild-local: ## runc codebuild spec
 
 .PHONY: run-local
 run-local: ## Build and run - localy
-	# rm -rf dist 
-	mkdir -p dist/local
-	cp .env dist/local/
+	rm -rf ./dist 
+	mkdir -p ./dist/local
+	cp .env ./dist/local/
 	cp -r form dist/local/form/
-	go build -o dist/local/$(BINARY) &&  ./dist/local/$(BINARY) 
+	 go build -o dist/local/$(BINARY)
+	DB_ENGINE=SQLITE  ./dist/local/$(BINARY) 
 
 .PHONY: run-local-docker
 run-local-docker: ## build linux binary and docker image
@@ -34,7 +33,7 @@ pre-build: ## pre build - get all dependencies
 
 .PHONY: build-image
 build-image: ## Build binary and docker image
-	GOOS=linux GOARCH=amd64 go build -o dist/linux/$(BINARY)
+	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./dist/linux/$(BINARY)
 	docker build -t $(IMAGE_REPOSITORY)/$(IMAGE):$(IMAGE_TAG) .
 
 
@@ -49,8 +48,6 @@ push-ecr: ## post build-image step to tag and push version + latest images
 	docker push $(ACCOUNT_NUM).dkr.ecr.$(REGION).amazonaws.com/$(IMAGE):$(IMAGE_TAG)
 	docker push $(ACCOUNT_NUM).dkr.ecr.$(REGION).amazonaws.com/$(IMAGE):latest
 
-
-#  cdk deploy --parameters imageName=octicketing --parameters imageTag=latest --parameters port=8080
 
 .PHONY: help
 help: ## Display this help
