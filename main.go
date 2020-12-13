@@ -245,10 +245,12 @@ func Delete(w http.ResponseWriter, r *http.Request) {
 
 func Health(w http.ResponseWriter, r *http.Request) {
 	if err := db.Ping(); err != nil {
+		handleDbError(w, err)
+		w.Write([]byte(err.Error()))
+		w.WriteHeader(http.StatusServiceUnavailable)
+	} else {
 		w.Write([]byte("healthy"))
 		w.WriteHeader(http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusServiceUnavailable)
 	}
 }
 
