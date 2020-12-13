@@ -9,7 +9,6 @@
         <td>User</td>
         <td>Description</td>
         <td>Details</td>
-        <td>CC List</td>
         <td>View</td>
         <td>Edit</td>
         <td>Delete</td>
@@ -22,10 +21,9 @@
         <td> {{ .User }} </td>
         <td> {{ .Description }} </td>
         <td> {{ .Details }} </td>
-        <td> {{ .CcList }} </td>
         <td><a href="/show?id={{ .ID }}">View</a></td>
         <td><a href="/edit?id={{ .ID }}">Edit</a></td>
-        <td><a href="/delete?id={{ .ID }}" data-method="delete">Delete</a></td>
+        <td><a href="/delete?id={{ .ID }}">Delete</a></td>
       </tr>
     {{ end }}
        </tbody>
