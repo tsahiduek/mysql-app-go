@@ -1,0 +1,14 @@
+{{ define "Edit" }}
+  {{ template "Header" }}
+    {{ template "Menu" }} 
+   <h2>Edit Ticket</h2>  
+    <form method="POST" action="update">
+      <input type="hidden" name="uid" value="{{ .ID }}" />
+      <label> User </label><input type="text" name="user"  value="{{ .User }}"  /><br />
+      <label> Description </label><input type="text" name="description"  value="{{ .Description }}"  /><br />
+      <label> Details </label><input type="text" name="details"  value="{{ .Details }}"  /><br />
+      <label> CC List </label><input type="text" name="ccList"  value="{{ .CcList }}"  /><br />
+      <input type="submit" value="Save ticket" />
+    </form><br />    
+  {{ template "Footer" }}
+{{ end }}
